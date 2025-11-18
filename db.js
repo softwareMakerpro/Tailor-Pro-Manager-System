@@ -85,7 +85,79 @@ function getOrdersByStatus(status) {
     const orders = getOrdersFromDB();
     return orders.filter(order => order.status === status);
 }
+// Enhanced Search Functions
+function searchClients(query) {
+    const clients = getClientsFromDB();
+    const searchTerm = query.toLowerCase().trim();
+    
+    if (!searchTerm) return clients;
+    
+    return clients.filter(client => 
+        client.name.toLowerCase().includes(searchTerm) ||
+        client.phone.includes(searchTerm) ||
+        (client.bookNo && client.bookNo.toLowerCase().includes(searchTerm)) ||
+        (client.measurements && JSON.stringify(client.measurements).toLowerCase().includes(searchTerm))
+    );
+}
 
+function searchOrders(query) {
+    const orders = getOrdersFromDB();
+    const searchTerm = query.toLowerCase().trim();
+    
+    if (!searchTerm) return orders;
+    
+    return orders.filter(order => 
+        order.clientName.toLowerCase().includes(searchTerm) ||
+        order.orderNumber.toLowerCase().includes(searchTerm) ||
+        order.description.toLowerCase().includes(searchTerm) ||
+        order.garmentType.toLowerCase().includes(searchTerm)
+    );
+}
+
+// Invoice Functions
+function generateInvoiceNumber() {
+    const invoices = getInvoicesFromDB();
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0,10).replace(/-/g, '');
+    const count = invoices.filter(inv => inv.invoiceDate.includes(today.toISOString().slice(0,10))).length + 1;
+    return `INV-${dateStr}-${count.toString().padStart(3, '0')}`;
+}
+
+function saveInvoiceToDB(invoice) {
+    try {
+        const invoices = getInvoicesFromDB();
+        
+        // Generate invoice number if not provided
+        if (!invoice.invoiceNumber) {
+            invoice.invoiceNumber = generateInvoiceNumber();
+        }
+        
+        // Add timestamp
+        invoice.createdAt = invoice.createdAt || new Date().toISOString();
+        invoice.updatedAt = new Date().toISOString();
+        
+        invoices.push(invoice);
+        localStorage.setItem('invoices', JSON.stringify(invoices));
+        return invoice;
+    } catch (error) {
+        console.error('Error saving invoice:', error);
+        return null;
+    }
+}
+
+function getInvoicesFromDB() {
+    try {
+        return JSON.parse(localStorage.getItem('invoices')) || [];
+    } catch (error) {
+        console.error('Error reading invoices:', error);
+        return [];
+    }
+}
+
+function getInvoiceById(invoiceId) {
+    const invoices = getInvoicesFromDB();
+    return invoices.find(invoice => invoice.id === invoiceId);
+}
 function getOrderStats() {
     const orders = getOrdersFromDB();
     const total = orders.length;
