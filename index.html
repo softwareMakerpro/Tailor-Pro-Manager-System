@@ -266,7 +266,21 @@
                 setTimeout(() => syncManager.fullSync(), 2000);
             }
         }
-
+<!-- Add this to your stats grid in index.html -->
+<div class="stat-card">
+    <div class="stat-icon orders">📦</div>
+    <div class="stat-info">
+        <h3 id="totalOrdersDash">0</h3>
+        <p>Total Orders</p>
+    </div>
+</div>
+<div class="stat-card">
+    <div class="stat-icon pending">⏳</div>
+    <div class="stat-info">
+        <h3 id="pendingOrdersDash">0</h3>
+        <p>Pending Orders</p>
+    </div>
+</div>
         function updateSyncStatus() {
             const statusElement = document.getElementById('syncStatus');
             if (!statusElement) return;
