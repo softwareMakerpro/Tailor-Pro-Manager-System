@@ -374,6 +374,215 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadClients();
         });
+
+        let editingClientId = null;
+let allClients = [];
+
+function loadClients() {
+    allClients = getClientsFromDB();
+    const container = document.getElementById('clientsList');
+    const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
+
+    const filteredClients = allClients.filter(client => 
+        client.name.toLowerCase().includes(searchTerm) ||
+        client.phone.includes(searchTerm) ||
+        (client.bookNo && client.bookNo.toLowerCase().includes(searchTerm))
+    );
+
+    if (filteredClients.length === 0) {
+        container.innerHTML = '<div class="empty-state">No clients found. Add your first client!</div>';
+        return;
+    }
+
+    container.innerHTML = filteredClients.map(client => `
+        <div class="client-card">
+            <div class="client-info">
+                <h4>${client.name}</h4>
+                <div class="client-details">
+                    <span>📞 ${client.phone}</span>
+                    <span>📖 ${client.bookNo || 'No Book No'}</span>
+                    <span>📅 ${new Date(client.createdAt).toLocaleDateString()}</span>
+                </div>
+                ${client.measurements && Object.keys(client.measurements).length > 0 ? `<div class="measurement-badge">📏 Measurements Saved</div>` : ''}
+            </div>
+            <div class="client-actions">
+                <button class="btn-outline" onclick="editClient('${client.id}')">Edit</button>
+                <button class="btn-outline" onclick="createInvoiceForClient('${client.id}')">Create Invoice</button>
+                <button class="btn-danger" onclick="deleteClient('${client.id}')">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Fast Search with Instant Results
+function showSearchResults() {
+    const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
+    const resultsContainer = document.getElementById('searchResults');
+    
+    if (searchTerm.length < 2) {
+        resultsContainer.innerHTML = '';
+        resultsContainer.style.display = 'none';
+        return;
+    }
+
+    const filtered = allClients.filter(client => 
+        client.name.toLowerCase().includes(searchTerm) ||
+        client.phone.includes(searchTerm) ||
+        (client.bookNo && client.bookNo.toLowerCase().includes(searchTerm))
+    ).slice(0, 5); // Show top 5 results
+
+    if (filtered.length === 0) {
+        resultsContainer.innerHTML = '<div class="search-result-item">No clients found</div>';
+    } else {
+        resultsContainer.innerHTML = filtered.map(client => `
+            <div class="search-result-item" onclick="selectClientFromSearch('${client.id}')">
+                <strong>${client.name}</strong>
+                <div>📞 ${client.phone} | 📖 ${client.bookNo || 'No Book No'}</div>
+            </div>
+        `).join('');
+    }
+    resultsContainer.style.display = 'block';
+}
+
+function selectClientFromSearch(clientId) {
+    const client = allClients.find(c => c.id === clientId);
+    if (client) {
+        document.getElementById('clientSearch').value = client.name;
+        document.getElementById('searchResults').style.display = 'none';
+    }
+}
+
+function searchClients() {
+    loadClients();
+}
+
+function openClientModal(clientId = null) {
+    editingClientId = clientId;
+    const modal = document.getElementById('clientModal');
+    const title = document.getElementById('modalTitle');
+    
+    if (clientId) {
+        title.textContent = 'Edit Client';
+        const client = getClientById(clientId);
+        if (client) {
+            document.getElementById('clientId').value = client.id;
+            document.getElementById('clientName').value = client.name;
+            document.getElementById('clientPhone').value = client.phone;
+            document.getElementById('clientBookNo').value = client.bookNo || '';
+            
+            // Load measurements if they exist
+            if (client.measurements) {
+                Object.keys(client.measurements).forEach(key => {
+                    const element = document.getElementById(`measure${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                    if (element && client.measurements[key]) {
+                        element.value = client.measurements[key];
+                    }
+                });
+            }
+            
+            // Load notes
+            const notesElement = document.getElementById('measureNotes');
+            if (notesElement && client.measurements && client.measurements.notes) {
+                notesElement.value = client.measurements.notes;
+            }
+        }
+    } else {
+        title.textContent = 'Add New Client';
+        document.getElementById('clientForm').reset();
+        document.getElementById('clientId').value = '';
+    }
+    
+    modal.style.display = 'block';
+}
+
+function closeClientModal() {
+    document.getElementById('clientModal').style.display = 'none';
+    editingClientId = null;
+}
+
+function saveClient(event) {
+    event.preventDefault();
+    
+    // Get all measurement values
+    const measurements = {};
+    const measurementFields = [
+        'length', 'shoulder', 'chest', 'waist', 'hips', 'sleeve', 'armhole', 
+        'bicep', 'wrist', 'neck', 'backWidth', 'frontLength', 'backLength', 
+        'thigh', 'knee', 'bottom', 'inseam', 'outseam', 'crotch', 'ankle'
+    ];
+    
+    measurementFields.forEach(field => {
+        const value = document.getElementById(`measure${field.charAt(0).toUpperCase() + field.slice(1)}`).value;
+        if (value) {
+            measurements[field] = value;
+        }
+    });
+    
+    // Get notes
+    const notesElement = document.getElementById('measureNotes');
+    if (notesElement && notesElement.value) {
+        measurements.notes = notesElement.value;
+    }
+    
+    const client = {
+        id: document.getElementById('clientId').value || generateId(),
+        name: document.getElementById('clientName').value,
+        phone: document.getElementById('clientPhone').value,
+        bookNo: document.getElementById('clientBookNo').value,
+        measurements: measurements,
+        createdAt: document.getElementById('clientId').value ? 
+            (getClientById(document.getElementById('clientId').value)?.createdAt || new Date().toISOString()) : 
+            new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+
+    // Validate required fields
+    if (!client.name || !client.phone || !client.bookNo) {
+        showNotification('Please fill in all required fields (Name, Phone, Book Number)', 'error');
+        return;
+    }
+
+    saveClientToDB(client);
+    closeClientModal();
+    loadClients();
+    showNotification(editingClientId ? 'Client updated successfully!' : 'Client added successfully!');
+}
+
+function editClient(clientId) {
+    openClientModal(clientId);
+}
+
+function createInvoiceForClient(clientId) {
+    window.location.href = `invoice.html?clientId=${clientId}`;
+}
+
+function deleteClient(clientId) {
+    if (confirm('Are you sure you want to delete this client?')) {
+        deleteClientFromDB(clientId);
+        loadClients();
+        showNotification('Client deleted successfully!');
+    }
+}
+
+// Close search results when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-container')) {
+        document.getElementById('searchResults').style.display = 'none';
+    }
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('clientModal');
+    if (event.target === modal) {
+        closeClientModal();
+    }
+});
+
+// Load clients when page opens
+document.addEventListener('DOMContentLoaded', function() {
+    loadClients();
+});
     </script>
 
     <style>
