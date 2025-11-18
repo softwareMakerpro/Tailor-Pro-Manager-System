@@ -502,5 +502,134 @@
             }
         }
     </style>
+    <script>
+// Client management functionality
+class ClientManager {
+    constructor() {
+        this.clients = JSON.parse(localStorage.getItem('clients')) || [];
+        this.init();
+    }
+
+    init() {
+        this.bindEvents();
+        this.loadClients();
+    }
+
+    bindEvents() {
+        // Save client button
+        document.getElementById('saveClient')?.addEventListener('click', () => this.saveClient());
+        
+        // Clear form button
+        document.getElementById('clearForm')?.addEventListener('click', () => this.clearForm());
+        
+        // Search functionality
+        document.getElementById('searchClient')?.addEventListener('input', (e) => this.searchClients(e.target.value));
+    }
+
+    saveClient() {
+        const client = {
+            id: Date.now().toString(),
+            name: document.getElementById('clientName').value.trim(),
+            phone: document.getElementById('clientPhone').value.trim(),
+            email: document.getElementById('clientEmail').value.trim(),
+            address: document.getElementById('clientAddress').value.trim(),
+            measurements: document.getElementById('clientMeasurements').value.trim(),
+            registrationDate: new Date().toLocaleDateString(),
+            status: 'Active'
+        };
+
+        // Validation
+        if (!client.name) {
+            alert('Please enter client name');
+            return;
+        }
+
+        if (!client.phone) {
+            alert('Please enter client phone number');
+            return;
+        }
+
+        // Add to clients array
+        this.clients.unshift(client);
+        
+        // Save to localStorage
+        localStorage.setItem('clients', JSON.stringify(this.clients));
+        
+        // Reload client list
+        this.loadClients();
+        
+        // Clear form
+        this.clearForm();
+        
+        // Show success message
+        alert('Client added successfully!');
+    }
+
+    clearForm() {
+        document.getElementById('clientName').value = '';
+        document.getElementById('clientPhone').value = '';
+        document.getElementById('clientEmail').value = '';
+        document.getElementById('clientAddress').value = '';
+        document.getElementById('clientMeasurements').value = '';
+    }
+
+    loadClients() {
+        const tbody = document.getElementById('clientsTableBody');
+        if (!tbody) return;
+
+        if (this.clients.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No clients found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = this.clients.map(client => `
+            <tr>
+                <td>${client.name}</td>
+                <td>${client.phone}</td>
+                <td>${client.email || 'N/A'}</td>
+                <td>${client.address || 'N/A'}</td>
+                <td>${client.measurements || 'N/A'}</td>
+                <td>${client.registrationDate}</td>
+                <td>
+                    <span class="badge bg-success">${client.status}</span>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    searchClients(query) {
+        const filteredClients = this.clients.filter(client => 
+            client.name.toLowerCase().includes(query.toLowerCase()) ||
+            client.phone.includes(query) ||
+            client.email?.toLowerCase().includes(query.toLowerCase())
+        );
+
+        const tbody = document.getElementById('clientsTableBody');
+        if (filteredClients.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No clients found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filteredClients.map(client => `
+            <tr>
+                <td>${client.name}</td>
+                <td>${client.phone}</td>
+                <td>${client.email || 'N/A'}</td>
+                <td>${client.address || 'N/A'}</td>
+                <td>${client.measurements || 'N/A'}</td>
+                <td>${client.registrationDate}</td>
+                <td>
+                    <span class="badge bg-success">${client.status}</span>
+                </td>
+            </tr>
+        `).join('');
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    new ClientManager();
+});
+</script>
 </body>
 </html>
