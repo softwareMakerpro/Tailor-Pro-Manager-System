@@ -1,4 +1,4 @@
-// Enhanced for JAMAL AL-SHUWAIKH - Kuwait Market
+// Enhanced for JAMAL AL-SHUWAIKH - Kuwait Market - WORKING VERSION
 class JamalTailorManager {
     constructor() {
         this.shopConfig = this.loadShopConfig();
@@ -89,6 +89,19 @@ class JamalTailorManager {
             date: this.formatDate(invoiceData.dateTime)
         };
     }
+
+    loadInitialData() {
+        // Load any initial data needed
+        console.log('Jamal Tailor Manager initialized');
+    }
+
+    initNavigation() {
+        // Navigation is handled in HTML
+    }
+
+    initEventListeners() {
+        // Event listeners are handled in individual pages
+    }
 }
 
 // Enhanced client management for Kuwait market
@@ -99,7 +112,7 @@ function saveKuwaitiClient(clientData) {
         country: 'Kuwait',
         preferredLanguage: clientData.preferredLanguage || 'Arabic',
         createdAt: new Date().toISOString(),
-        measurements: this.standardizeMeasurements(clientData.measurements)
+        measurements: clientData.measurements || {}
     };
 
     saveClientToDB(client);
@@ -172,8 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Enhanced notification system
 function showNotification(message, type = 'success') {
+    // Remove any existing notifications first
+    const existingNotifications = document.querySelectorAll('.custom-notification');
+    existingNotifications.forEach(notification => notification.remove());
+
     const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
+    notification.className = `custom-notification notification-${type}`;
     notification.innerHTML = `
         <div class="notification-content">
             <span class="notification-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span>
@@ -187,14 +204,15 @@ function showNotification(message, type = 'success') {
         top: 20px;
         right: 20px;
         background: white;
-        color: var(--dark);
+        color: #2c3e50;
         padding: 15px 20px;
         border-radius: 10px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         z-index: 10000;
         animation: slideInRight 0.3s ease;
-        border-left: 4px solid ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--warning)'};
+        border-left: 4px solid ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#f39c12'};
         max-width: 400px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     `;
 
     document.body.appendChild(notification);
@@ -210,16 +228,78 @@ function showNotification(message, type = 'success') {
     }, 4000);
 }
 
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+// Add CSS animations for notifications
+if (!document.querySelector('#notification-styles')) {
+    const style = document.createElement('style');
+    style.id = 'notification-styles';
+    style.textContent = `
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Dashboard data loading function
+function loadDashboardData() {
+    const clients = getClientsFromDB();
+    const invoices = getInvoicesFromDB();
+    const expenses = getExpensesFromDB();
+    
+    // Update client count
+    const clientsElement = document.getElementById('totalClients');
+    if (clientsElement) clientsElement.textContent = clients.length;
+    
+    // Update invoice count
+    const invoicesElement = document.getElementById('totalOrders');
+    if (invoicesElement) invoicesElement.textContent = invoices.length;
+    
+    // Calculate and update revenue
+    const totalRevenue = invoices.reduce((sum, invoice) => sum + (invoice.grandTotal || 0), 0);
+    const revenueElement = document.getElementById('totalRevenue');
+    if (revenueElement) revenueElement.textContent = `KWD ${totalRevenue.toFixed(3)}`;
+    
+    // Calculate and update expenses
+    const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+    const expensesElement = document.getElementById('totalExpenses');
+    if (expensesElement) expensesElement.textContent = `KWD ${totalExpenses.toFixed(3)}`;
+    
+    // Calculate profit
+    const profit = totalRevenue - totalExpenses;
+    const profitElement = document.getElementById('profit');
+    if (profitElement) profitElement.textContent = `KWD ${profit.toFixed(3)}`;
+    
+    // Load recent invoices
+    loadRecentInvoices(invoices.slice(0, 5));
+}
+
+function loadRecentInvoices(recentInvoices) {
+    const container = document.getElementById('recentInvoices');
+    if (!container) return;
+    
+    if (recentInvoices.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No invoices yet. Create your first invoice to see activity here.</p></div>';
+        return;
     }
-    @keyframes slideOutRight {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-`;
-document.head.appendChild(style);
+    
+    container.innerHTML = recentInvoices.map(invoice => {
+        const client = getClientById(invoice.clientId);
+        return `
+            <div class="activity-item">
+                <div class="activity-icon">🧾</div>
+                <div class="activity-info">
+                    <div class="activity-title">Invoice ${invoice.id}</div>
+                    <div class="activity-details">
+                        ${client ? client.name : 'Unknown Client'} - KWD ${invoice.grandTotal.toFixed(3)}
+                    </div>
+                    <div class="activity-time">${new Date(invoice.dateTime).toLocaleDateString()}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
