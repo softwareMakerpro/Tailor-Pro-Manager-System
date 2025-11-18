@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - JAMAL AL-SHUWAIKH</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="shop-branding">
+                    <h1>JAMAL AL-SHUWAIKH</h1>
+                    <p class="shop-subtitle">MEN TAILOR & TEXTILE</p>
+                    <p class="shop-arabic">جمال الشويخ للرجال وفنستها</p>
+                </div>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-link">📊 Dashboard</a>
+                <a href="clients.html" class="nav-link">👥 Clients</a>
+                <a href="invoice.html" class="nav-link">🧾 Invoice</a>
+                <a href="expenses.html" class="nav-link">💸 Expenses</a>
+                <a href="settings.html" class="nav-link active">⚙️ Settings</a>
+            </nav>
+            <div class="shop-contact">
+                <p>📞 97686004</p>
+                <p>📍 Kuwait – Comm. Area No. 9 – Mariam Comp – Basement – Shop No. 8</p>
+            </div>
+        </header>
+
+        <main>
+            <div class="page-header">
+                <h2>Settings & Backup</h2>
+            </div>
+
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>💾 Backup & Restore</h3>
+                    <div class="backup-actions">
+                        <button class="btn-primary" onclick="downloadBackup()">Download Backup</button>
+                        <button class="btn-outline" onclick="document.getElementById('restoreFile').click()">Restore from Backup</button>
+                        <input type="file" id="restoreFile" accept=".json" style="display: none" onchange="restoreBackup(this.files[0])">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🔗 Cloud Sync</h3>
+                    <div id="githubStatus" class="sync-status">
+                        <p>GitHub Sync: <span id="syncStatusText">Not Connected</span></p>
+                    </div>
+                    <button class="btn-outline" onclick="setupGitHubSync()">Setup Cloud Sync</button>
+                </div>
+
+                <div class="settings-section">
+                    <h3>📊 Data Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h3 id="statsClients">0</h3>
+                                <p>Total Clients</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h3 id="statsInvoices">0</h3>
+                                <p>Total Invoices</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-info">
+                                <h3 id="statsExpenses">0</h3>
+                                <p>Total Expenses</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="backup-manager.js"></script>
+    <script src="sync-manager.js"></script>
+    <script src="script.js"></script>
+    <script>
+        function downloadBackup() {
+            const backup = {
+                clients: getClientsFromDB(),
+                invoices: getInvoicesFromDB(),
+                expenses: getExpensesFromDB(),
+                settings: getSettings(),
+                timestamp: new Date().toISOString()
+            };
+
+            const dataStr = JSON.stringify(backup, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `jamal-tailor-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showNotification('Backup downloaded successfully!');
+        }
+
+        function restoreBackup(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    
+                    if (backup.clients) localStorage.setItem('clients', JSON.stringify(backup.clients));
+                    if (backup.invoices) localStorage.setItem('invoices', JSON.stringify(backup.invoices));
+                    if (backup.expenses) localStorage.setItem('expenses', JSON.stringify(backup.expenses));
+                    if (backup.settings) localStorage.setItem('settings', JSON.stringify(backup.settings));
+                    
+                    showNotification('Backup restored successfully!');
+                    loadDataStatistics();
+                    
+                } catch (error) {
+                    alert('Error restoring backup: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function loadDataStatistics() {
+            const clients = getClientsFromDB();
+            const invoices = getInvoicesFromDB();
+            const expenses = getExpensesFromDB();
+            
+            document.getElementById('statsClients').textContent = clients.length;
+            document.getElementById('statsInvoices').textContent = invoices.length;
+            document.getElementById('statsExpenses').textContent = expenses.length;
+        }
+
+        function setupGitHubSync() {
+            alert('Go to Dashboard and click "Connect Cloud" to setup GitHub sync.');
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDataStatistics();
+        });
+    </script>
+
+    <style>
+        .settings-container {
+            max-width: 800px;
+        }
+
+        .settings-section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .settings-section h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .backup-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sync-status {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses - JAMAL AL-SHUWAIKH</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="shop-branding">
+                    <h1>JAMAL AL-SHUWAIKH</h1>
+                    <p class="shop-subtitle">MEN TAILOR & TEXTILE</p>
+                    <p class="shop-arabic">جمال الشويخ للرجال وفنستها</p>
+                </div>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-link">📊 Dashboard</a>
+                <a href="clients.html" class="nav-link">👥 Clients</a>
+                <a href="invoice.html" class="nav-link">🧾 Invoice</a>
+                <a href="expenses.html" class="nav-link active">💸 Expenses</a>
+                <a href="reports.html" class="nav-link">📈 Reports</a>
+                <a href="settings.html" class="nav-link">⚙️ Settings</a>
+            </nav>
+            <div class="shop-contact">
+                <p>📞 97686004</p>
+                <p>📍 Kuwait – Comm. Area No. 9 – Mariam Comp – Basement – Shop No. 8</p>
+            </div>
+        </header>
+
+        <main>
+            <div class="page-header">
+                <h2>Expense Management</h2>
+                <div class="header-actions">
+                    <button class="btn-outline" onclick="openExpenseModal('employee')">➕ Employee</button>
+                    <button class="btn-outline" onclick="openExpenseModal('shop')">➕ Shop Expense</button>
+                    <button class="btn-outline" onclick="openExpenseModal('material')">➕ Material</button>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="expense-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">💸</div>
+                    <div class="stat-info">
+                        <h3 id="totalExpenses">KWD 0.000</h3>
+                        <p>Total Expenses</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3 id="employeeExpenses">KWD 0.000</h3>
+                        <p>Employee Costs</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏪</div>
+                    <div class="stat-info">
+                        <h3 id="shopExpenses">KWD 0.000</h3>
+                        <p>Shop Expenses</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🧵</div>
+                    <div class="stat-info">
+                        <h3 id="materialExpenses">KWD 0.000</h3>
+                        <p>Material Costs</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Tabs -->
+            <div class="expense-tabs">
+                <button class="tab-btn active" onclick="showExpenseTab('all')">All Expenses</button>
+                <button class="tab-btn" onclick="showExpenseTab('employee')">👥 Employee</button>
+                <button class="tab-btn" onclick="showExpenseTab('shop')">🏪 Shop</button>
+                <button class="tab-btn" onclick="showExpenseTab('material')">🧵 Materials</button>
+            </div>
+
+            <div class="expenses-list" id="expensesList">
+                <!-- Expenses will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="expenseModalTitle">Add New Expense</h3>
+                <span class="close" onclick="closeExpenseModal()">×</span>
+            </div>
+            <form id="expenseForm" onsubmit="saveExpense(event)">
+                <input type="hidden" id="expenseId">
+                <input type="hidden" id="expenseType">
+                
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="expenseTitle" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Amount (KWD) *</label>
+                    <input type="number" id="expenseAmount" required step="0.001" min="0">
+                </div>
+
+                <div class="form-group" id="employeeFields" style="display: none;">
+                    <label>Employee Type</label>
+                    <select id="employeeType">
+                        <option value="salary">Salary</option>
+                        <option value="advance">Advance Payment</option>
+                        <option value="bonus">Bonus</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="shopFields" style="display: none;">
+                    <label>Shop Expense Type</label>
+                    <select id="shopExpenseType">
+                        <option value="rent">Rent</option>
+                        <option value="electricity">Electricity</option>
+                        <option value="water">Water</option>
+                        <option value="internet">Internet</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="food">Food/Lunch</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="materialFields" style="display: none;">
+                    <label>Material Type</label>
+                    <select id="materialType">
+                        <option value="fabric">Fabric</option>
+                        <option value="thread">Thread</option>
+                        <option value="buttons">Buttons</option>
+                        <option value="zippers">Zippers</option>
+                        <option value="other">Other Supplies</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Date *</label>
+                    <input type="date" id="expenseDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description/Notes</label>
+                    <textarea id="expenseNotes" placeholder="Additional details..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeExpenseModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="script.js"></script>
+    <script>
+        let editingExpenseId = null;
+        let currentExpenseType = 'all';
+        let allExpenses = [];
+
+        function loadExpenses() {
+            allExpenses = getExpensesFromDB();
+            updateExpenseStats();
+            filterExpenses(currentExpenseType);
+        }
+
+        function updateExpenseStats() {
+            const total = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const employeeExpenses = allExpenses.filter(e => e.type === 'employee').reduce((sum, exp) => sum + exp.amount, 0);
+            const shopExpenses = allExpenses.filter(e => e.type === 'shop').reduce((sum, exp) => sum + exp.amount, 0);
+            const materialExpenses = allExpenses.filter(e => e.type === 'material').reduce((sum, exp) => sum + exp.amount, 0);
+
+            document.getElementById('totalExpenses').textContent = `KWD ${total.toFixed(3)}`;
+            document.getElementById('employeeExpenses').textContent = `KWD ${employeeExpenses.toFixed(3)}`;
+            document.getElementById('shopExpenses').textContent = `KWD ${shopExpenses.toFixed(3)}`;
+            document.getElementById('materialExpenses').textContent = `KWD ${materialExpenses.toFixed(3)}`;
+        }
+
+        function filterExpenses(type) {
+            currentExpenseType = type;
+            const container = document.getElementById('expensesList');
+            
+            // Update active tab
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const filtered = type === 'all' ? allExpenses : allExpenses.filter(exp => exp.type === type);
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state">No ${type === 'all' ? '' : type} expenses recorded</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(expense => `
+                <div class="expense-card ${expense.type}">
+                    <div class="expense-icon">
+                        ${expense.type === 'employee' ? '👥' : expense.type === 'shop' ? '🏪' : '🧵'}
+                    </div>
+                    <div class="expense-info">
+                        <h4>${expense.title}</h4>
+                        <div class="expense-details">
+                            <span class="amount">KWD ${expense.amount.toFixed(3)}</span>
+                            <span class="type">${expense.subType || expense.type}</span>
+                            <span class="date">${new Date(expense.date).toLocaleDateString()}</span>
+                        </div>
+                        ${expense.notes ? `<p class="expense-notes">${expense.notes}</p>` : ''}
+                    </div>
+                    <div class="expense-actions">
+                        <button class="btn-outline" onclick="editExpense('${expense.id}')">Edit</button>
+                        <button class="btn-danger" onclick="deleteExpense('${expense.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showExpenseTab(type) {
+            filterExpenses(type);
+        }
+
+        function openExpenseModal(type, expenseId = null) {
+            editingExpenseId = expenseId;
+            currentExpenseType = type;
+            const modal = document.getElementById('expenseModal');
+            const title = document.getElementById('expenseModalTitle');
+            
+            // Reset form and show/hide fields based on type
+            document.getElementById('expenseForm').reset();
+            document.getElementById('employeeFields').style.display = 'none';
+            document.getElementById('shopFields').style.display = 'none';
+            document.getElementById('materialFields').style.display = 'none';
+            
+            if (type === 'employee') {
+                title.textContent = expenseId ? 'Edit Employee Expense' : 'Add Employee Expense';
+                document.getElementById('employeeFields').style.display = 'block';
+            } else if (type === 'shop') {
+                title.textContent = expenseId ? 'Edit Shop Expense' : 'Add Shop Expense';
+                document.getElementById('shopFields').style.display = 'block';
+            } else if (type === 'material') {
+                title.textContent = expenseId ? 'Edit Material Expense' : 'Add Material Expense';
+                document.getElementById('materialFields').style.display = 'block';
+            }
+            
+            document.getElementById('expenseType').value = type;
+            document.getElementById('expenseDate').valueAsDate = new Date();
+
+            if (expenseId) {
+                const expense = getExpenseById(expenseId);
+                if (expense) {
+                    document.getElementById('expenseId').value = expense.id;
+                    document.getElementById('expenseTitle').value = expense.title;
+                    document.getElementById('expenseAmount').value = expense.amount;
+                    document.getElementById('expenseDate').value = expense.date;
+                    document.getElementById('expenseNotes').value = expense.notes || '';
+                    
+                    if (expense.type === 'employee') {
+                        document.getElementById('employeeType').value = expense.subType;
+                    } else if (expense.type === 'shop') {
+                        document.getElementById('shopExpenseType').value = expense.subType;
+                    } else if (expense.type === 'material') {
+                        document.getElementById('materialType').value = expense.subType;
+                    }
+                }
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeExpenseModal() {
+            document.getElementById('expenseModal').style.display = 'none';
+            editingExpenseId = null;
+        }
+
+        function saveExpense(event) {
+            event.preventDefault();
+            
+            const type = document.getElementById('expenseType').value;
+            let subType = '';
+            
+            if (type === 'employee') {
+                subType = document.getElementById('employeeType').value;
+            } else if (type === 'shop') {
+                subType = document.getElementById('shopExpenseType').value;
+            } else if (type === 'material') {
+                subType = document.getElementById('materialType').value;
+            }
+
+            const expense = {
+                id: document.getElementById('expenseId').value || generateId(),
+                title: document.getElementById('expenseTitle').value,
+                amount: parseFloat(document.getElementById('expenseAmount').value),
+                type: type,
+                subType: subType,
+                date: document.getElementById('expenseDate').value,
+                notes: document.getElementById('expenseNotes').value,
+                createdAt: new Date().toISOString()
+            };
+
+            saveExpenseToDB(expense);
+            closeExpenseModal();
+            loadExpenses();
+            showNotification(editingExpenseId ? 'Expense updated successfully!' : 'Expense added successfully!');
+        }
+
+        function editExpense(expenseId) {
+            const expense = getExpenseById(expenseId);
+            if (expense) {
+                openExpenseModal(expense.type, expenseId);
+            }
+        }
+
+        function deleteExpense(expenseId) {
+            if (confirm('Are you sure you want to delete this expense?')) {
+                deleteExpenseFromDB(expenseId);
+                loadExpenses();
+                showNotification('Expense deleted successfully!');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadExpenses();
+        });
+    </script>
+
+    <style>
+        .expense-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .expense-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .expense-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .expense-card.employee {
+            border-left-color: #3498db;
+        }
+
+        .expense-card.shop {
+            border-left-color: #e74c3c;
+        }
+
+        .expense-card.material {
+            border-left-color: #f39c12;
+        }
+
+        .expense-icon {
+            font-size: 1.5rem;
+            width: 50px;
+            height: 50px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .expense-info {
+            flex: 1;
+        }
+
+        .expense-info h4 {
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        .expense-details {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .amount {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .type {
+            background: #f8f9fa;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .expense-notes {
+            margin-top: 8px;
+            color: #666;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .expense-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .expense-details {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .expense-tabs {
+                justify-content: center;
+            }
+        }
+    </style>
+</body>
+</html>

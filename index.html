@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAMAL AL-SHUWAIKH - Tailor Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="assets/logos/jamal-logo.png" alt="JAMAL AL-SHUWAIKH">
+                <div class="shop-info">
+                    <h1>JAMAL AL-SHUWAIKH</h1>
+                    <p class="shop-subtitle">MEN TAILOR & TEXTILE</p>
+                    <p class="shop-arabic">جمال الشويخ للرجال وفنستها</p>
+                </div>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-link active">
+                    <img src="assets/icons/dashboard.svg" alt="Dashboard"> Dashboard
+                </a>
+                <a href="clients.html" class="nav-link">
+                    <img src="assets/icons/clients.svg" alt="Clients"> Clients
+                </a>
+                <a href="invoice.html" class="nav-link">
+                    <img src="assets/icons/invoice.svg" alt="Invoice"> Invoice
+                </a>
+                <a href="expenses.html" class="nav-link">
+                    <img src="assets/icons/expenses.svg" alt="Expenses"> Expenses
+                </a>
+                <a href="settings.html" class="nav-link">
+                    <img src="assets/icons/settings.svg" alt="Settings"> Settings
+                </a>
+            </nav>
+            <div class="shop-contact">
+                <p>📞 97686004</p>
+                <p>📍 Kuwait – Comm. Area No. 9 – Mariam Comp – Basement – Shop No. 8</p>
+            </div>
+        </header>
+
+        <main>
+            <div class="dashboard-header">
+                <h2>Business Dashboard</h2>
+                <div class="header-actions">
+                    <div class="date-filter">
+                        <select id="periodFilter">
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                    <button class="btn-sync" onclick="syncManager.fullSync()">
+                        <img src="assets/icons/sync.svg" alt="Sync"> Sync Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kuwaiti Dinar Currency Display -->
+            <div class="currency-display">
+                <span>💵 Currency: Kuwaiti Dinar (KWD)</span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon clients">👥</div>
+                    <div class="stat-info">
+                        <h3 id="totalClients">0</h3>
+                        <p>Total Clients</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orders">📊</div>
+                    <div class="stat-info">
+                        <h3 id="totalOrders">0</h3>
+                        <p>Total Orders</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon revenue">💰</div>
+                    <div class="stat-info">
+                        <h3 id="totalRevenue">KWD 0</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon expenses">💸</div>
+                    <div class="stat-info">
+                        <h3 id="totalExpenses">KWD 0</h3>
+                        <p>Total Expenses</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon profit">📈</div>
+                    <div class="stat-info">
+                        <h3 id="profit">KWD 0</h3>
+                        <p>Profit</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sync Status -->
+            <div class="sync-status-card">
+                <div class="status-info">
+                    <img src="assets/icons/github.svg" alt="Sync" class="status-icon">
+                    <div>
+                        <div class="status-title">Cloud Sync Status</div>
+                        <div id="syncStatus" class="status-message">Offline Mode - Local Storage Only</div>
+                    </div>
+                </div>
+                <div class="status-actions">
+                    <button class="btn-outline" onclick="setupGitHubSync()">Connect Cloud</button>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Revenue vs Expenses</h3>
+                    <canvas id="revenueExpenseChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Monthly Orders</h3>
+                    <canvas id="ordersChart"></canvas>
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h3>Recent Invoices</h3>
+                <div id="recentInvoices" class="activity-list">
+                    <div class="empty-state">
+                        <p>No invoices yet. Create your first invoice to see activity here.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="window.location.href='clients.html'">
+                        <span>➕</span> Add New Client
+                    </button>
+                    <button class="action-btn" onclick="window.location.href='invoice.html'">
+                        <span>🧾</span> Create Invoice
+                    </button>
+                    <button class="action-btn" onclick="window.location.href='expenses.html'">
+                        <span>💸</span> Add Expense
+                    </button>
+                    <button class="action-btn" onclick="backupManager.downloadBackup()">
+                        <span>💾</span> Backup Data
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- GitHub Setup Modal -->
+    <div id="githubModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔗 Setup Cloud Sync</h3>
+                <span class="close" onclick="closeGithubModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Connect to GitHub for automatic cloud backups and multi-device sync.</p>
+                <div class="setup-steps">
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <span class="step-text">Create GitHub account at github.com</span>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <span class="step-text">Create personal access token with "repo" permissions</span>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <span class="step-text">Enter your details below</span>
+                    </div>
+                </div>
+                <form id="githubSetupForm">
+                    <div class="form-group">
+                        <label>GitHub Username</label>
+                        <input type="text" id="githubUsername" placeholder="your-github-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Repository Name</label>
+                        <input type="text" id="githubRepo" placeholder="jamal-tailor-data" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Personal Access Token</label>
+                        <input type="password" id="githubToken" placeholder="ghp_xxxxxxxx" required>
+                        <small>Create token at: github.com/settings/tokens</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeGithubModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Connect & Sync</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="chart-loader.js"></script>
+    <script src="backup-manager.js"></script>
+    <script src="sync-manager.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Initialize for Jamal Al-Shuwaikh
+        const shopConfig = {
+            name: "JAMAL AL-SHUWAIKH",
+            subtitle: "MEN TAILOR & TEXTILE",
+            arabicName: "جمال الشويخ للرجال وفنستها",
+            phone: "97686004",
+            address: "Kuwait – Comm. Area No. 9 – Mariam Comp – Basement – Shop No. 8",
+            currency: "KWD"
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set shop configuration
+            localStorage.setItem('shopConfig', JSON.stringify(shopConfig));
+            
+            // Load dashboard data
+            loadDashboardData();
+            updateSyncStatus();
+            
+            // Event listeners
+            document.getElementById('periodFilter').addEventListener('change', loadDashboardData);
+            document.getElementById('githubSetupForm').addEventListener('submit', setupGitHub);
+
+            // Auto-sync every 5 minutes if connected
+            setInterval(() => {
+                if (window.githubStorage && githubStorage.githubEnabled) {
+                    syncManager.fullSync();
+                }
+            }, 300000);
+        });
+
+        function setupGitHubSync() {
+            document.getElementById('githubModal').style.display = 'block';
+        }
+
+        function closeGithubModal() {
+            document.getElementById('githubModal').style.display = 'none';
+        }
+
+        async function setupGitHub(event) {
+            if (event) event.preventDefault();
+            
+            const username = document.getElementById('githubUsername').value;
+            const repo = document.getElementById('githubRepo').value;
+            const token = document.getElementById('githubToken').value;
+
+            if (!window.githubStorage) {
+                showNotification('Sync system not loaded yet. Please refresh page.', 'error');
+                return;
+            }
+
+            const success = await githubStorage.initGitHub(username, repo, token);
+            if (success) {
+                closeGithubModal();
+                updateSyncStatus();
+                // Do initial sync
+                setTimeout(() => syncManager.fullSync(), 2000);
+            }
+        }
+
+        function updateSyncStatus() {
+            const statusElement = document.getElementById('syncStatus');
+            if (!statusElement) return;
+
+            if (window.githubStorage && githubStorage.githubEnabled) {
+                const status = githubStorage.getSyncStatus();
+                if (status.lastSync) {
+                    const timeDiff = (new Date() - new Date(status.lastSync)) / (1000 * 60);
+                    if (timeDiff < 5) {
+                        statusElement.innerHTML = '<span class="status-online">✅ Synced - All devices connected</span>';
+                    } else if (timeDiff < 60) {
+                        statusElement.innerHTML = `<span class="status-warning">🔄 Synced ${Math.floor(timeDiff)} minutes ago</span>`;
+                    } else {
+                        statusElement.innerHTML = '<span class="status-warning">⚠️ Sync needed</span>';
+                    }
+                } else {
+                    statusElement.innerHTML = '<span class="status-warning">🔄 Ready to sync</span>';
+                }
+            } else {
+                statusElement.innerHTML = '<span class="status-offline">📴 Offline - Local storage only</span>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - JAMAL AL-SHUWAIKH</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="shop-branding">
+                    <h1>JAMAL AL-SHUWAIKH</h1>
+                    <p class="shop-subtitle">MEN TAILOR & TEXTILE</p>
+                    <p class="shop-arabic">جمال الشويخ للرجال وفنستها</p>
+                </div>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-link">📊 Dashboard</a>
+                <a href="clients.html" class="nav-link">👥 Clients</a>
+                <a href="invoice.html" class="nav-link active">🧾 Invoice</a>
+                <a href="expenses.html" class="nav-link">💸 Expenses</a>
+                <a href="settings.html" class="nav-link">⚙️ Settings</a>
+            </nav>
+            <div class="shop-contact">
+                <p>📞 97686004</p>
+                <p>📍 Kuwait – Comm. Area No. 9 – Mariam Comp – Basement – Shop No. 8</p>
+            </div>
+        </header>
+
+        <main>
+            <div class="page-header">
+                <h2>Create Invoice</h2>
+            </div>
+
+            <div class="invoice-container">
+                <div class="invoice-form">
+                    <div class="form-section">
+                        <h3>Client Information</h3>
+                        <div class="form-group">
+                            <label>Select Client</label>
+                            <select id="clientSelect" onchange="loadClientDetails()">
+                                <option value="">-- Select Client --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Items</h3>
+                        <div id="itemsList">
+                            <div class="item-row">
+                                <input type="text" class="item-name" placeholder="Item name" onchange="calculateTotal()">
+                                <input type="number" class="item-qty" placeholder="Qty" value="1" onchange="calculateTotal()">
+                                <input type="number" class="item-rate" placeholder="Rate (KWD)" onchange="calculateTotal()">
+                                <span class="item-total">0.000</span>
+                                <button type="button" onclick="removeItem(this)">×</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-outline" onclick="addItem()">+ Add Item</button>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Pricing</h3>
+                        <div class="pricing-grid">
+                            <div class="form-group">
+                                <label>Subtotal (KWD)</label>
+                                <input type="number" id="subtotal" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Tax (KWD)</label>
+                                <input type="number" id="tax" value="0" onchange="calculateTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label>Discount (KWD)</label>
+                                <input type="number" id="discount" value="0" onchange="calculateTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label>Grand Total (KWD)</label>
+                                <input type="number" id="grandTotal" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="clearInvoice()">Clear</button>
+                        <button type="button" class="btn btn-primary" onclick="generateInvoice()">Generate Invoice</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="script.js"></script>
+    <script>
+        function loadClientSelect() {
+            const select = document.getElementById('clientSelect');
+            const clients = getClientsFromDB();
+            
+            select.innerHTML = '<option value="">-- Select Client --</option>';
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = `${client.name} (${client.phone})`;
+                select.appendChild(option);
+            });
+        }
+
+        function addItem() {
+            const itemsList = document.getElementById('itemsList');
+            const itemRow = document.createElement('div');
+            itemRow.className = 'item-row';
+            itemRow.innerHTML = `
+                <input type="text" class="item-name" placeholder="Item name" onchange="calculateTotal()">
+                <input type="number" class="item-qty" placeholder="Qty" value="1" onchange="calculateTotal()">
+                <input type="number" class="item-rate" placeholder="Rate (KWD)" onchange="calculateTotal()">
+                <span class="item-total">0.000</span>
+                <button type="button" onclick="removeItem(this)">×</button>
+            `;
+            itemsList.appendChild(itemRow);
+        }
+
+        function removeItem(button) {
+            button.parentElement.remove();
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            let subtotal = 0;
+            const itemRows = document.querySelectorAll('.item-row');
+            
+            itemRows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+                const total = qty * rate;
+                row.querySelector('.item-total').textContent = total.toFixed(3);
+                subtotal += total;
+            });
+
+            const tax = parseFloat(document.getElementById('tax').value) || 0;
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            const grandTotal = subtotal + tax - discount;
+
+            document.getElementById('subtotal').value = subtotal.toFixed(3);
+            document.getElementById('grandTotal').value = grandTotal.toFixed(3);
+        }
+
+        function generateInvoice() {
+            const clientId = document.getElementById('clientSelect').value;
+            if (!clientId) {
+                alert('Please select a client');
+                return;
+            }
+
+            const items = [];
+            document.querySelectorAll('.item-row').forEach(row => {
+                const name = row.querySelector('.item-name').value;
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+                if (name && qty > 0 && rate > 0) {
+                    items.push({
+                        itemName: name,
+                        qty: qty,
+                        rate: rate,
+                        total: qty * rate
+                    });
+                }
+            });
+
+            if (items.length === 0) {
+                alert('Please add at least one item');
+                return;
+            }
+
+            const invoice = {
+                id: generateId(),
+                clientId: clientId,
+                items: items,
+                subtotal: parseFloat(document.getElementById('subtotal').value),
+                tax: parseFloat(document.getElementById('tax').value) || 0,
+                discount: parseFloat(document.getElementById('discount').value) || 0,
+                grandTotal: parseFloat(document.getElementById('grandTotal').value),
+                dateTime: new Date().toISOString(),
+                currency: 'KWD'
+            };
+
+            saveInvoiceToDB(invoice);
+            
+            // Share via WhatsApp
+            shareInvoiceWhatsApp(invoice.id);
+            
+            showNotification('Invoice created and shared via WhatsApp!');
+            clearInvoice();
+        }
+
+        function shareInvoiceWhatsApp(invoiceId) {
+            const invoice = getInvoiceById(invoiceId);
+            const client = getClientById(invoice.clientId);
+            
+            let message = `*JAMAL AL-SHUWAIKH*\n`;
+            message += `جمال الشويخ للرجال وفنستها\n\n`;
+            message += `Invoice: ${invoice.id}\n`;
+            message += `Client: ${client.name}\n`;
+            message += `Phone: ${client.phone}\n\n`;
+            message += `Items:\n`;
+            
+            invoice.items.forEach((item, index) => {
+                message += `${index + 1}. ${item.itemName} - ${item.qty} × KWD ${item.rate.toFixed(3)} = KWD ${item.total.toFixed(3)}\n`;
+            });
+            
+            message += `\nSubtotal: KWD ${invoice.subtotal.toFixed(3)}\n`;
+            message += `Tax: KWD ${invoice.tax.toFixed(3)}\n`;
+            message += `Discount: KWD ${invoice.discount.toFixed(3)}\n`;
+            message += `*Total: KWD ${invoice.grandTotal.toFixed(3)}*\n\n`;
+            message += `Thank you! شكراً لك!\n`;
+            message += `📞 97686004`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${client.phone}?text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function clearInvoice() {
+            document.getElementById('clientSelect').value = '';
+            document.getElementById('itemsList').innerHTML = `
+                <div class="item-row">
+                    <input type="text" class="item-name" placeholder="Item name" onchange="calculateTotal()">
+                    <input type="number" class="item-qty" placeholder="Qty" value="1" onchange="calculateTotal()">
+                    <input type="number" class="item-rate" placeholder="Rate (KWD)" onchange="calculateTotal()">
+                    <span class="item-total">0.000</span>
+                    <button type="button" onclick="removeItem(this)">×</button>
+                </div>
+            `;
+            document.getElementById('tax').value = '0';
+            document.getElementById('discount').value = '0';
+            calculateTotal();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadClientSelect();
+            calculateTotal();
+        });
+    </script>
+
+    <style>
+        .invoice-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-section h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .item-row input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .item-total {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</body>
+</html>

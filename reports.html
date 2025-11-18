@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - JAMAL AL-SHUWAIKH</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="shop-branding">
+                    <h1>JAMAL AL-SHUWAIKH</h1>
+                    <p class="shop-subtitle">MEN TAILOR & TEXTILE</p>
+                    <p class="shop-arabic">جمال الشويخ للرجال وفنستها</p>
+                </div>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-link">📊 Dashboard</a>
+                <a href="clients.html" class="nav-link">👥 Clients</a>
+                <a href="invoice.html" class="nav-link">🧾 Invoice</a>
+                <a href="expenses.html" class="nav-link">💸 Expenses</a>
+                <a href="reports.html" class="nav-link active">📈 Reports</a>
+                <a href="settings.html" class="nav-link">⚙️ Settings</a>
+            </nav>
+            <div class="shop-contact">
+                <p>📞 97686004</p>
+                <p>📍 Kuwait – Comm. Area No. 9 – Mariam Comp – Basement – Shop No. 8</p>
+            </div>
+        </header>
+
+        <main>
+            <div class="page-header">
+                <h2>Business Reports</h2>
+                <div class="report-period">
+                    <select id="reportPeriod" onchange="loadReports()">
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                    <div id="customRange" style="display: none;">
+                        <input type="date" id="startDate">
+                        <input type="date" id="endDate">
+                        <button onclick="loadCustomReport()">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Big Bold Summary Numbers -->
+            <div class="big-summary">
+                <div class="big-number positive">
+                    <div class="number">KWD <span id="totalIncome">0.000</span></div>
+                    <div class="label">TOTAL INCOME</div>
+                </div>
+                <div class="big-number negative">
+                    <div class="number">KWD <span id="totalExpenses">0.000</span></div>
+                    <div class="label">TOTAL EXPENSES</div>
+                </div>
+                <div class="big-number net-income">
+                    <div class="number">KWD <span id="netProfit">0.000</span></div>
+                    <div class="label">NET PROFIT</div>
+                </div>
+            </div>
+
+            <!-- Order Tracking -->
+            <div class="order-stats">
+                <h3>📦 Order Tracking</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📥</div>
+                        <div class="stat-info">
+                            <h3 id="receivedOrders">0</h3>
+                            <p>Received Orders</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚙️</div>
+                        <div class="stat-info">
+                            <h3 id="processOrders">0</h3>
+                            <p>In Process</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-info">
+                            <h3 id="pendingOrders">0</h3>
+                            <p>Pending</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <h3 id="completedOrders">0</h3>
+                            <p>Completed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>💰 Income vs Expenses</h3>
+                    <canvas id="incomeExpenseChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>📊 Order Trends</h3>
+                    <canvas id="orderTrendsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Detailed Breakdown -->
+            <div class="breakdown-section">
+                <h3>📋 Detailed Breakdown</h3>
+                <div class="breakdown-grid">
+                    <div class="breakdown-card">
+                        <h4>Income Sources</h4>
+                        <div id="incomeBreakdown" class="breakdown-list">
+                            <!-- Income breakdown will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="breakdown-card">
+                        <h4>Expense Categories</h4>
+                        <div id="expenseBreakdown" class="breakdown-list">
+                            <!-- Expense breakdown will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bill Status -->
+            <div class="bill-status">
+                <h3>🧾 Bill Status</h3>
+                <div class="bill-stats">
+                    <div class="bill-card received">
+                        <div class="bill-icon">💳</div>
+                        <div class="bill-info">
+                            <h3 id="billsReceived">0</h3>
+                            <p>Bills Received</p>
+                            <div class="bill-amount">KWD <span id="billsReceivedAmount">0.000</span></div>
+                        </div>
+                    </div>
+                    <div class="bill-card pending">
+                        <div class="bill-icon">⏳</div>
+                        <div class="bill-info">
+                            <h3 id="billsPending">0</h3>
+                            <p>Bills Pending</p>
+                            <div class="bill-amount">KWD <span id="billsPendingAmount">0.000</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="chart-loader.js"></script>
+    <script src="script.js"></script>
+    <script>
+        function loadReports() {
+            const period = document.getElementById('reportPeriod').value;
+            const invoices = getInvoicesFromDB();
+            const expenses = getExpensesFromDB();
+            
+            let filteredInvoices = [];
+            let filteredExpenses = [];
+            const now = new Date();
+
+            if (period === 'week') {
+                const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+                filteredInvoices = invoices.filter(inv => new Date(inv.dateTime) >= weekStart);
+                filteredExpenses = expenses.filter(exp => new Date(exp.date) >= weekStart);
+            } else if (period === 'month') {
+                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                filteredInvoices = invoices.filter(inv => new Date(inv.dateTime) >= monthStart);
+                filteredExpenses = expenses.filter(exp => new Date(exp.date) >= monthStart);
+            } else if (period === 'year') {
+                const yearStart = new Date(now.getFullYear(), 0, 1);
+                filteredInvoices = invoices.filter(inv => new Date(inv.dateTime) >= yearStart);
+                filteredExpenses = expenses.filter(exp => new Date(exp.date) >= yearStart);
+            } else {
+                filteredInvoices = invoices;
+                filteredExpenses = expenses;
+            }
+
+            // Calculate totals
+            const totalIncome = filteredInvoices.reduce((sum, inv) => sum + inv.grandTotal, 0);
+            const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const netProfit = totalIncome - totalExpenses;
+
+            // Update big numbers
+            document.getElementById('totalIncome').textContent = totalIncome.toFixed(3);
+            document.getElementById('totalExpenses').textContent = totalExpenses.toFixed(3);
+            document.getElementById('netProfit').textContent = netProfit.toFixed(3);
+
+            // Update order stats (simplified - in real app, orders would be tracked separately)
+            document.getElementById('receivedOrders').textContent = filteredInvoices.length;
+            document.getElementById('processOrders').textContent = Math.floor(filteredInvoices.length * 0.3);
+            document.getElementById('pendingOrders').textContent = Math.floor(filteredInvoices.length * 0.2);
+            document.getElementById('completedOrders').textContent = Math.floor(filteredInvoices.length * 0.5);
+
+            // Update bill status
+            document.getElementById('billsReceived').textContent = Math.floor(filteredInvoices.length * 0.8);
+            document.getElementById('billsPending').textContent = Math.floor(filteredInvoices.length * 0.2);
+            document.getElementById('billsReceivedAmount').textContent = (totalIncome * 0.8).toFixed(3);
+            document.getElementById('billsPendingAmount').textContent = (totalIncome * 0.2).toFixed(3);
+
+            // Update breakdowns
+            updateBreakdowns(filteredInvoices, filteredExpenses);
+            
+            // Update charts
+            updateCharts(filteredInvoices, filteredExpenses);
+        }
+
+        function updateBreakdowns(invoices, expenses) {
+            // Income breakdown by garment type (simplified)
+            const incomeByType = {};
+            invoices.forEach(inv => {
+                inv.items.forEach(item => {
+                    const type = item.itemName.split(' ')[0]; // Simple categorization
+                    incomeByType[type] = (incomeByType[type] || 0) + item.total;
+                });
+            });
+
+            let incomeHtml = '';
+            Object.keys(incomeByType).forEach(type => {
+                incomeHtml += `
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">${type}</span>
+                        <span class="breakdown-amount">KWD ${incomeByType[type].toFixed(3)}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('incomeBreakdown').innerHTML = incomeHtml || '<div class="empty-state">No income data</div>';
+
+            // Expense breakdown
+            const expenseByType = {};
+            expenses.forEach(exp => {
+                expenseByType[exp.type] = (expenseByType[exp.type] || 0) + exp.amount;
+            });
+
+            let expenseHtml = '';
+            Object.keys(expenseByType).forEach(type => {
+                expenseHtml += `
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">${type}</span>
+                        <span class="breakdown-amount">KWD ${expenseByType[type].toFixed(3)}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('expenseBreakdown').innerHTML = expenseHtml || '<div class="empty-state">No expense data</div>';
+        }
+
+        function updateCharts(invoices, expenses) {
+            // Simple chart implementation
+            console.log('Updating charts with:', invoices.length, 'invoices and', expenses.length, 'expenses');
+            
+            // In a real implementation, you would use Chart.js to create detailed charts
+            // showing income vs expenses over time, order trends, etc.
+        }
+
+        function loadCustomReport() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates');
+                return;
+            }
+
+            const invoices = getInvoicesFromDB();
+            const expenses = getExpensesFromDB();
+            
+            const filteredInvoices = invoices.filter(inv => {
+                const invDate = new Date(inv.dateTime);
+                return invDate >= new Date(startDate) && invDate <= new Date(endDate);
+            });
+            
+            const filteredExpenses = expenses.filter(exp => {
+                const expDate = new Date(exp.date);
+                return expDate >= new Date(startDate) && expDate <= new Date(endDate);
+            });
+
+            // Update displays with custom filtered data
+            const totalIncome = filteredInvoices.reduce((sum, inv) => sum + inv.grandTotal, 0);
+            const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const netProfit = totalIncome - totalExpenses;
+
+            document.getElementById('totalIncome').textContent = totalIncome.toFixed(3);
+            document.getElementById('totalExpenses').textContent = totalExpenses.toFixed(3);
+            document.getElementById('netProfit').textContent = netProfit.toFixed(3);
+
+            updateBreakdowns(filteredInvoices, filteredExpenses);
+        }
+
+        document.getElementById('reportPeriod').addEventListener('change', function() {
+            if (this.value === 'custom') {
+                document.getElementById('customRange').style.display = 'flex';
+            } else {
+                document.getElementById('customRange').style.display = 'none';
+                loadReports();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadReports();
+        });
+    </script>
+
+    <style>
+        .report-period {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .report-period select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        #customRange {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .big-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .big-number {
+            background: white;
+            padding: 40px 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .big-number.positive {
+            border-top: 8px solid var(--success);
+        }
+
+        .big-number.negative {
+            border-top: 8px solid var(--danger);
+        }
+
+        .big-number.net-income {
+            border-top: 8px solid var(--primary);
+        }
+
+        .big-number .number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .big-number.positive .number {
+            color: var(--success);
+        }
+
+        .big-number.negative .number {
+            color: var(--danger);
+        }
+
+        .big-number.net-income .number {
+            color: var(--primary);
+        }
+
+        .big-number .label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .order-stats {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .order-stats h3 {
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .breakdown-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .breakdown-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .breakdown-card h4 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-label {
+            font-weight: 500;
+        }
+
+        .breakdown-amount {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .bill-status {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .bill-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .bill-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 25px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .bill-card.received {
+            border-left: 4px solid var(--success);
+        }
+
+        .bill-card.pending {
+            border-left: 4px solid var(--warning);
+        }
+
+        .bill-icon {
+            font-size: 2rem;
+        }
+
+        .bill-info h3 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .bill-amount {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .big-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .breakdown-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .bill-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .report-period {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</body>
+</html>

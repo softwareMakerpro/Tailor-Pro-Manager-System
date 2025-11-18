@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clients - JAMAL AL-SHUWAIKH</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="shop-branding">
+                    <h1>JAMAL AL-SHUWAIKH</h1>
+                    <p class="shop-subtitle">MEN TAILOR & TEXTILE</p>
+                    <p class="shop-arabic">جمال الشويخ للرجال وفنستها</p>
+                </div>
+            </div>
+            <nav>
+                <a href="index.html" class="nav-link">📊 Dashboard</a>
+                <a href="clients.html" class="nav-link active">👥 Clients</a>
+                <a href="invoice.html" class="nav-link">🧾 Invoice</a>
+                <a href="expenses.html" class="nav-link">💸 Expenses</a>
+                <a href="reports.html" class="nav-link">📈 Reports</a>
+                <a href="settings.html" class="nav-link">⚙️ Settings</a>
+            </nav>
+            <div class="shop-contact">
+                <p>📞 97686004</p>
+                <p>📍 Kuwait – Comm. Area No. 9 – Mariam Comp – Basement – Shop No. 8</p>
+            </div>
+        </header>
+
+        <main>
+            <div class="page-header">
+                <h2>Client Management</h2>
+                <button class="btn-primary" onclick="openClientModal()">+ Add Client</button>
+            </div>
+
+            <!-- Fast Search Bar -->
+            <div class="search-container">
+                <input type="text" id="clientSearch" placeholder="🔍 Type to search clients... (name, phone, book no)" 
+                       onkeyup="searchClients()" oninput="showSearchResults()">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+
+            <div class="clients-list" id="clientsList">
+                <!-- Clients will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Client Modal with 20 Measurement Fields -->
+    <div id="clientModal" class="modal large-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Client</h3>
+                <span class="close" onclick="closeClientModal()">×</span>
+            </div>
+            <form id="clientForm" onsubmit="saveClient(event)">
+                <input type="hidden" id="clientId">
+                
+                <div class="form-section">
+                    <h4>Basic Information</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name *</label>
+                            <input type="text" id="clientName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone *</label>
+                            <input type="tel" id="clientPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Book Number *</label>
+                            <input type="text" id="clientBookNo" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Measurements (Optional - Can edit later)</h4>
+                    <div class="measurements-grid">
+                        <!-- Row 1 -->
+                        <div class="form-group">
+                            <label>Length</label>
+                            <input type="number" id="measureLength" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Shoulder</label>
+                            <input type="number" id="measureShoulder" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Chest</label>
+                            <input type="number" id="measureChest" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Waist</label>
+                            <input type="number" id="measureWaist" step="0.1" placeholder="cm">
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div class="form-group">
+                            <label>Hips</label>
+                            <input type="number" id="measureHips" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Sleeve Length</label>
+                            <input type="number" id="measureSleeve" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Armhole</label>
+                            <input type="number" id="measureArmhole" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Bicep</label>
+                            <input type="number" id="measureBicep" step="0.1" placeholder="cm">
+                        </div>
+
+                        <!-- Row 3 -->
+                        <div class="form-group">
+                            <label>Wrist</label>
+                            <input type="number" id="measureWrist" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Neck</label>
+                            <input type="number" id="measureNeck" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Back Width</label>
+                            <input type="number" id="measureBackWidth" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Front Length</label>
+                            <input type="number" id="measureFrontLength" step="0.1" placeholder="cm">
+                        </div>
+
+                        <!-- Row 4 -->
+                        <div class="form-group">
+                            <label>Back Length</label>
+                            <input type="number" id="measureBackLength" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Thigh</label>
+                            <input type="number" id="measureThigh" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Knee</label>
+                            <input type="number" id="measureKnee" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Bottom</label>
+                            <input type="number" id="measureBottom" step="0.1" placeholder="cm">
+                        </div>
+
+                        <!-- Row 5 -->
+                        <div class="form-group">
+                            <label>Inseam</label>
+                            <input type="number" id="measureInseam" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Outseam</label>
+                            <input type="number" id="measureOutseam" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Crotch</label>
+                            <input type="number" id="measureCrotch" step="0.1" placeholder="cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Ankle</label>
+                            <input type="number" id="measureAnkle" step="0.1" placeholder="cm">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Additional Notes</label>
+                        <textarea id="measureNotes" placeholder="Any special instructions or notes..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeClientModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="script.js"></script>
+    <script>
+        let editingClientId = null;
+        let allClients = [];
+
+        function loadClients() {
+            allClients = getClientsFromDB();
+            const container = document.getElementById('clientsList');
+            const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
+
+            const filteredClients = allClients.filter(client => 
+                client.name.toLowerCase().includes(searchTerm) ||
+                client.phone.includes(searchTerm) ||
+                client.bookNo.toLowerCase().includes(searchTerm)
+            );
+
+            if (filteredClients.length === 0) {
+                container.innerHTML = '<div class="empty-state">No clients found. Add your first client!</div>';
+                return;
+            }
+
+            container.innerHTML = filteredClients.map(client => `
+                <div class="client-card">
+                    <div class="client-info">
+                        <h4>${client.name}</h4>
+                        <div class="client-details">
+                            <span>📞 ${client.phone}</span>
+                            <span>📖 ${client.bookNo}</span>
+                            <span>📅 ${new Date(client.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        ${client.measurements ? `<div class="measurement-badge">📏 Measurements Saved</div>` : ''}
+                    </div>
+                    <div class="client-actions">
+                        <button class="btn-outline" onclick="editClient('${client.id}')">Edit</button>
+                        <button class="btn-outline" onclick="createInvoiceForClient('${client.id}')">Create Invoice</button>
+                        <button class="btn-danger" onclick="deleteClient('${client.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Fast Search with Instant Results
+        function showSearchResults() {
+            const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (searchTerm.length < 2) {
+                resultsContainer.innerHTML = '';
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            const filtered = allClients.filter(client => 
+                client.name.toLowerCase().includes(searchTerm) ||
+                client.phone.includes(searchTerm) ||
+                client.bookNo.toLowerCase().includes(searchTerm)
+            ).slice(0, 5); // Show top 5 results
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = '<div class="search-result-item">No clients found</div>';
+            } else {
+                resultsContainer.innerHTML = filtered.map(client => `
+                    <div class="search-result-item" onclick="selectClientFromSearch('${client.id}')">
+                        <strong>${client.name}</strong>
+                        <div>📞 ${client.phone} | 📖 ${client.bookNo}</div>
+                    </div>
+                `).join('');
+            }
+            resultsContainer.style.display = 'block';
+        }
+
+        function selectClientFromSearch(clientId) {
+            const client = allClients.find(c => c.id === clientId);
+            document.getElementById('clientSearch').value = client.name;
+            document.getElementById('searchResults').style.display = 'none';
+            // Optional: Auto-redirect to invoice page with this client selected
+            // window.location.href = `invoice.html?clientId=${clientId}`;
+        }
+
+        function searchClients() {
+            loadClients();
+        }
+
+        function openClientModal(clientId = null) {
+            editingClientId = clientId;
+            const modal = document.getElementById('clientModal');
+            const title = document.getElementById('modalTitle');
+            
+            if (clientId) {
+                title.textContent = 'Edit Client';
+                const client = getClientById(clientId);
+                if (client) {
+                    document.getElementById('clientId').value = client.id;
+                    document.getElementById('clientName').value = client.name;
+                    document.getElementById('clientPhone').value = client.phone;
+                    document.getElementById('clientBookNo').value = client.bookNo;
+                    
+                    // Load measurements if they exist
+                    if (client.measurements) {
+                        Object.keys(client.measurements).forEach(key => {
+                            const element = document.getElementById(`measure${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                            if (element) element.value = client.measurements[key];
+                        });
+                    }
+                }
+            } else {
+                title.textContent = 'Add New Client';
+                document.getElementById('clientForm').reset();
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeClientModal() {
+            document.getElementById('clientModal').style.display = 'none';
+            editingClientId = null;
+        }
+
+        function saveClient(event) {
+            event.preventDefault();
+            
+            const client = {
+                id: document.getElementById('clientId').value || generateId(),
+                name: document.getElementById('clientName').value,
+                phone: document.getElementById('clientPhone').value,
+                bookNo: document.getElementById('clientBookNo').value,
+                measurements: {
+                    length: document.getElementById('measureLength').value,
+                    shoulder: document.getElementById('measureShoulder').value,
+                    chest: document.getElementById('measureChest').value,
+                    waist: document.getElementById('measureWaist').value,
+                    hips: document.getElementById('measureHips').value,
+                    sleeve: document.getElementById('measureSleeve').value,
+                    armhole: document.getElementById('measureArmhole').value,
+                    bicep: document.getElementById('measureBicep').value,
+                    wrist: document.getElementById('measureWrist').value,
+                    neck: document.getElementById('measureNeck').value,
+                    backWidth: document.getElementById('measureBackWidth').value,
+                    frontLength: document.getElementById('measureFrontLength').value,
+                    backLength: document.getElementById('measureBackLength').value,
+                    thigh: document.getElementById('measureThigh').value,
+                    knee: document.getElementById('measureKnee').value,
+                    bottom: document.getElementById('measureBottom').value,
+                    inseam: document.getElementById('measureInseam').value,
+                    outseam: document.getElementById('measureOutseam').value,
+                    crotch: document.getElementById('measureCrotch').value,
+                    ankle: document.getElementById('measureAnkle').value,
+                    notes: document.getElementById('measureNotes').value
+                },
+                createdAt: document.getElementById('clientId').value ? 
+                    getClientById(document.getElementById('clientId').value)?.createdAt || new Date().toISOString() : 
+                    new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            saveClientToDB(client);
+            closeClientModal();
+            loadClients();
+            showNotification(editingClientId ? 'Client updated successfully!' : 'Client added successfully!');
+        }
+
+        function editClient(clientId) {
+            openClientModal(clientId);
+        }
+
+        function createInvoiceForClient(clientId) {
+            window.location.href = `invoice.html?clientId=${clientId}`;
+        }
+
+        function deleteClient(clientId) {
+            if (confirm('Are you sure you want to delete this client?')) {
+                deleteClientFromDB(clientId);
+                loadClients();
+                showNotification('Client deleted successfully!');
+            }
+        }
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('searchResults').style.display = 'none';
+            }
+        });
+
+        // Load clients when page opens
+        document.addEventListener('DOMContentLoaded', function() {
+            loadClients();
+        });
+    </script>
+
+    <style>
+        .large-modal .modal-content {
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+        }
+
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .search-result-item:hover {
+            background: #f5f5f5;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .client-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .client-info h4 {
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .client-details {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .measurement-badge {
+            background: var(--success);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .client-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-section h4 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .measurements-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .measurements-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .client-card {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .client-details {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</body>
+</html>
