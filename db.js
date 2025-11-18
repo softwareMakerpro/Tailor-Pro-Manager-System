@@ -30,7 +30,103 @@ function getClientsFromDB() {
         return [];
     }
 }
+// ORDER MANAGEMENT FUNCTIONS
+function getOrdersFromDB() {
+    try {
+        return JSON.parse(localStorage.getItem('orders')) || [];
+    } catch (error) {
+        console.error('Error reading orders:', error);
+        return [];
+    }
+}
 
+function saveOrderToDB(order) {
+    try {
+        const orders = getOrdersFromDB();
+        const existingIndex = orders.findIndex(o => o.id === order.id);
+        
+        if (existingIndex !== -1) {
+            orders[existingIndex] = order;
+        } else {
+            orders.push(order);
+        }
+        
+        localStorage.setItem('orders', JSON.stringify(orders));
+        return order.id;
+    } catch (error) {
+        console.error('Error saving order:', error);
+        return null;
+    }
+}
+
+function getOrderById(orderId) {
+    const orders = getOrdersFromDB();
+    return orders.find(order => order.id === orderId);
+}
+
+function getOrdersByClientId(clientId) {
+    const orders = getOrdersFromDB();
+    return orders.filter(order => order.clientId === clientId);
+}
+
+function deleteOrderFromDB(orderId) {
+    try {
+        const orders = getOrdersFromDB();
+        const filteredOrders = orders.filter(order => order.id !== orderId);
+        localStorage.setItem('orders', JSON.stringify(filteredOrders));
+        return true;
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        return false;
+    }
+}
+
+function getOrdersByStatus(status) {
+    const orders = getOrdersFromDB();
+    return orders.filter(order => order.status === status);
+}
+
+function getOrderStats() {
+    const orders = getOrdersFromDB();
+    const total = orders.length;
+    const received = orders.filter(o => o.status === 'received').length;
+    const inProcess = orders.filter(o => o.status === 'process').length;
+    const pending = orders.filter(o => o.status === 'pending').length;
+    const completed = orders.filter(o => o.status === 'completed').length;
+    
+    return {
+        total,
+        received,
+        inProcess,
+        pending,
+        completed
+    };
+}
+
+// Update client functions to include order status
+function saveClientToDB(client) {
+    try {
+        const clients = getClientsFromDB();
+        const existingIndex = clients.findIndex(c => c.id === client.id);
+        
+        // Ensure client has orderStatus field
+        if (!client.orderStatus) {
+            client.orderStatus = 'received';
+        }
+        
+        if (existingIndex !== -1) {
+            clients[existingIndex] = client;
+        } else {
+            clients.push(client);
+        }
+        
+        localStorage.setItem('clients', JSON.stringify(clients));
+        return client.id;
+    } catch (error) {
+        console.error('Error saving client:', error);
+        return null;
+    }
+}
 function saveClientToDB(client) {
     try {
         const clients = getClientsFromDB();
