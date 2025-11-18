@@ -5,6 +5,158 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clients - JAMAL AL-SHUWAIKH</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .large-modal .modal-content {
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+        }
+
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .search-result-item:hover {
+            background: #f5f5f5;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .client-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .client-info h4 {
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .client-details {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .measurement-badge {
+            background: var(--success);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .client-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-section h4 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .measurements-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        @media (max-width: 768px) {
+            .measurements-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .client-card {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .client-details {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .client-actions {
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -56,7 +208,7 @@
                 <h3 id="modalTitle">Add New Client</h3>
                 <span class="close" onclick="closeClientModal()">×</span>
             </div>
-            <form id="clientForm" onsubmit="saveClient(event)">
+            <form id="clientForm">
                 <input type="hidden" id="clientId">
                 
                 <div class="form-section">
@@ -179,7 +331,7 @@
 
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeClientModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Client</button>
+                    <button type="button" class="btn btn-primary" onclick="saveClient()">Save Client</button>
                 </div>
             </form>
         </div>
@@ -196,10 +348,12 @@
             const container = document.getElementById('clientsList');
             const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
 
+            console.log('Loading clients:', allClients); // Debug log
+
             const filteredClients = allClients.filter(client => 
                 client.name.toLowerCase().includes(searchTerm) ||
                 client.phone.includes(searchTerm) ||
-                client.bookNo.toLowerCase().includes(searchTerm)
+                (client.bookNo && client.bookNo.toLowerCase().includes(searchTerm))
             );
 
             if (filteredClients.length === 0) {
@@ -213,10 +367,11 @@
                         <h4>${client.name}</h4>
                         <div class="client-details">
                             <span>📞 ${client.phone}</span>
-                            <span>📖 ${client.bookNo}</span>
+                            <span>📖 ${client.bookNo || 'No Book No'}</span>
                             <span>📅 ${new Date(client.createdAt).toLocaleDateString()}</span>
                         </div>
-                        ${client.measurements ? `<div class="measurement-badge">📏 Measurements Saved</div>` : ''}
+                        ${client.measurements && Object.keys(client.measurements).some(key => client.measurements[key] && key !== 'notes') ? 
+                            '<div class="measurement-badge">📏 Measurements Saved</div>' : ''}
                     </div>
                     <div class="client-actions">
                         <button class="btn-outline" onclick="editClient('${client.id}')">Edit</button>
@@ -241,8 +396,8 @@
             const filtered = allClients.filter(client => 
                 client.name.toLowerCase().includes(searchTerm) ||
                 client.phone.includes(searchTerm) ||
-                client.bookNo.toLowerCase().includes(searchTerm)
-            ).slice(0, 5); // Show top 5 results
+                (client.bookNo && client.bookNo.toLowerCase().includes(searchTerm))
+            ).slice(0, 5);
 
             if (filtered.length === 0) {
                 resultsContainer.innerHTML = '<div class="search-result-item">No clients found</div>';
@@ -250,7 +405,7 @@
                 resultsContainer.innerHTML = filtered.map(client => `
                     <div class="search-result-item" onclick="selectClientFromSearch('${client.id}')">
                         <strong>${client.name}</strong>
-                        <div>📞 ${client.phone} | 📖 ${client.bookNo}</div>
+                        <div>📞 ${client.phone} | 📖 ${client.bookNo || 'No Book No'}</div>
                     </div>
                 `).join('');
             }
@@ -259,10 +414,11 @@
 
         function selectClientFromSearch(clientId) {
             const client = allClients.find(c => c.id === clientId);
-            document.getElementById('clientSearch').value = client.name;
-            document.getElementById('searchResults').style.display = 'none';
-            // Optional: Auto-redirect to invoice page with this client selected
-            // window.location.href = `invoice.html?clientId=${clientId}`;
+            if (client) {
+                document.getElementById('clientSearch').value = client.name;
+                document.getElementById('searchResults').style.display = 'none';
+                loadClients();
+            }
         }
 
         function searchClients() {
@@ -270,6 +426,7 @@
         }
 
         function openClientModal(clientId = null) {
+            console.log('Opening client modal for:', clientId); // Debug log
             editingClientId = clientId;
             const modal = document.getElementById('clientModal');
             const title = document.getElementById('modalTitle');
@@ -281,19 +438,30 @@
                     document.getElementById('clientId').value = client.id;
                     document.getElementById('clientName').value = client.name;
                     document.getElementById('clientPhone').value = client.phone;
-                    document.getElementById('clientBookNo').value = client.bookNo;
+                    document.getElementById('clientBookNo').value = client.bookNo || '';
                     
                     // Load measurements if they exist
                     if (client.measurements) {
                         Object.keys(client.measurements).forEach(key => {
-                            const element = document.getElementById(`measure${key.charAt(0).toUpperCase() + key.slice(1)}`);
-                            if (element) element.value = client.measurements[key];
+                            if (key !== 'notes') {
+                                const element = document.getElementById(`measure${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                                if (element && client.measurements[key]) {
+                                    element.value = client.measurements[key];
+                                }
+                            }
                         });
+                    }
+                    
+                    // Load notes
+                    const notesElement = document.getElementById('measureNotes');
+                    if (notesElement && client.measurements && client.measurements.notes) {
+                        notesElement.value = client.measurements.notes;
                     }
                 }
             } else {
                 title.textContent = 'Add New Client';
                 document.getElementById('clientForm').reset();
+                document.getElementById('clientId').value = '';
             }
             
             modal.style.display = 'block';
@@ -304,50 +472,62 @@
             editingClientId = null;
         }
 
-        function saveClient(event) {
-            event.preventDefault();
+        function saveClient() {
+            console.log('Saving client...'); // Debug log
             
-            const client = {
+            // Get all measurement values
+            const measurements = {};
+            const measurementFields = [
+                'length', 'shoulder', 'chest', 'waist', 'hips', 'sleeve', 'armhole', 
+                'bicep', 'wrist', 'neck', 'backWidth', 'frontLength', 'backLength', 
+                'thigh', 'knee', 'bottom', 'inseam', 'outseam', 'crotch', 'ankle'
+            ];
+            
+            measurementFields.forEach(field => {
+                const element = document.getElementById(`measure${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                if (element && element.value) {
+                    measurements[field] = element.value;
+                }
+            });
+            
+            // Get notes
+            const notesElement = document.getElementById('measureNotes');
+            if (notesElement && notesElement.value) {
+                measurements.notes = notesElement.value;
+            }
+            
+            const clientData = {
                 id: document.getElementById('clientId').value || generateId(),
-                name: document.getElementById('clientName').value,
-                phone: document.getElementById('clientPhone').value,
-                bookNo: document.getElementById('clientBookNo').value,
-                measurements: {
-                    length: document.getElementById('measureLength').value,
-                    shoulder: document.getElementById('measureShoulder').value,
-                    chest: document.getElementById('measureChest').value,
-                    waist: document.getElementById('measureWaist').value,
-                    hips: document.getElementById('measureHips').value,
-                    sleeve: document.getElementById('measureSleeve').value,
-                    armhole: document.getElementById('measureArmhole').value,
-                    bicep: document.getElementById('measureBicep').value,
-                    wrist: document.getElementById('measureWrist').value,
-                    neck: document.getElementById('measureNeck').value,
-                    backWidth: document.getElementById('measureBackWidth').value,
-                    frontLength: document.getElementById('measureFrontLength').value,
-                    backLength: document.getElementById('measureBackLength').value,
-                    thigh: document.getElementById('measureThigh').value,
-                    knee: document.getElementById('measureKnee').value,
-                    bottom: document.getElementById('measureBottom').value,
-                    inseam: document.getElementById('measureInseam').value,
-                    outseam: document.getElementById('measureOutseam').value,
-                    crotch: document.getElementById('measureCrotch').value,
-                    ankle: document.getElementById('measureAnkle').value,
-                    notes: document.getElementById('measureNotes').value
-                },
+                name: document.getElementById('clientName').value.trim(),
+                phone: document.getElementById('clientPhone').value.trim(),
+                bookNo: document.getElementById('clientBookNo').value.trim(),
+                measurements: measurements,
                 createdAt: document.getElementById('clientId').value ? 
-                    getClientById(document.getElementById('clientId').value)?.createdAt || new Date().toISOString() : 
+                    (getClientById(document.getElementById('clientId').value)?.createdAt || new Date().toISOString()) : 
                     new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
 
-            saveClientToDB(client);
-            closeClientModal();
-            loadClients();
-            showNotification(editingClientId ? 'Client updated successfully!' : 'Client added successfully!');
+            console.log('Client data to save:', clientData); // Debug log
+
+            // Validate required fields
+            if (!clientData.name || !clientData.phone || !clientData.bookNo) {
+                showNotification('Please fill in all required fields (Name, Phone, Book Number)', 'error');
+                return;
+            }
+
+            const success = saveClientToDB(clientData);
+            if (success) {
+                closeClientModal();
+                loadClients();
+                showNotification(editingClientId ? 'Client updated successfully!' : 'Client added successfully!');
+            } else {
+                showNotification('Error saving client. Please try again.', 'error');
+            }
         }
 
         function editClient(clientId) {
+            console.log('Editing client:', clientId); // Debug log
             openClientModal(clientId);
         }
 
@@ -357,9 +537,13 @@
 
         function deleteClient(clientId) {
             if (confirm('Are you sure you want to delete this client?')) {
-                deleteClientFromDB(clientId);
-                loadClients();
-                showNotification('Client deleted successfully!');
+                const success = deleteClientFromDB(clientId);
+                if (success) {
+                    loadClients();
+                    showNotification('Client deleted successfully!');
+                } else {
+                    showNotification('Error deleting client.', 'error');
+                }
             }
         }
 
@@ -370,475 +554,19 @@
             }
         });
 
-        // Load clients when page opens
-        document.addEventListener('DOMContentLoaded', function() {
-            loadClients();
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('clientModal');
+            if (event.target === modal) {
+                closeClientModal();
+            }
         });
 
-        let editingClientId = null;
-let allClients = [];
-
-function loadClients() {
-    allClients = getClientsFromDB();
-    const container = document.getElementById('clientsList');
-    const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
-
-    const filteredClients = allClients.filter(client => 
-        client.name.toLowerCase().includes(searchTerm) ||
-        client.phone.includes(searchTerm) ||
-        (client.bookNo && client.bookNo.toLowerCase().includes(searchTerm))
-    );
-
-    if (filteredClients.length === 0) {
-        container.innerHTML = '<div class="empty-state">No clients found. Add your first client!</div>';
-        return;
-    }
-
-    container.innerHTML = filteredClients.map(client => `
-        <div class="client-card">
-            <div class="client-info">
-                <h4>${client.name}</h4>
-                <div class="client-details">
-                    <span>📞 ${client.phone}</span>
-                    <span>📖 ${client.bookNo || 'No Book No'}</span>
-                    <span>📅 ${new Date(client.createdAt).toLocaleDateString()}</span>
-                </div>
-                ${client.measurements && Object.keys(client.measurements).length > 0 ? `<div class="measurement-badge">📏 Measurements Saved</div>` : ''}
-            </div>
-            <div class="client-actions">
-                <button class="btn-outline" onclick="editClient('${client.id}')">Edit</button>
-                <button class="btn-outline" onclick="createInvoiceForClient('${client.id}')">Create Invoice</button>
-                <button class="btn-danger" onclick="deleteClient('${client.id}')">Delete</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Fast Search with Instant Results
-function showSearchResults() {
-    const searchTerm = document.getElementById('clientSearch').value.toLowerCase();
-    const resultsContainer = document.getElementById('searchResults');
-    
-    if (searchTerm.length < 2) {
-        resultsContainer.innerHTML = '';
-        resultsContainer.style.display = 'none';
-        return;
-    }
-
-    const filtered = allClients.filter(client => 
-        client.name.toLowerCase().includes(searchTerm) ||
-        client.phone.includes(searchTerm) ||
-        (client.bookNo && client.bookNo.toLowerCase().includes(searchTerm))
-    ).slice(0, 5); // Show top 5 results
-
-    if (filtered.length === 0) {
-        resultsContainer.innerHTML = '<div class="search-result-item">No clients found</div>';
-    } else {
-        resultsContainer.innerHTML = filtered.map(client => `
-            <div class="search-result-item" onclick="selectClientFromSearch('${client.id}')">
-                <strong>${client.name}</strong>
-                <div>📞 ${client.phone} | 📖 ${client.bookNo || 'No Book No'}</div>
-            </div>
-        `).join('');
-    }
-    resultsContainer.style.display = 'block';
-}
-
-function selectClientFromSearch(clientId) {
-    const client = allClients.find(c => c.id === clientId);
-    if (client) {
-        document.getElementById('clientSearch').value = client.name;
-        document.getElementById('searchResults').style.display = 'none';
-    }
-}
-
-function searchClients() {
-    loadClients();
-}
-
-function openClientModal(clientId = null) {
-    editingClientId = clientId;
-    const modal = document.getElementById('clientModal');
-    const title = document.getElementById('modalTitle');
-    
-    if (clientId) {
-        title.textContent = 'Edit Client';
-        const client = getClientById(clientId);
-        if (client) {
-            document.getElementById('clientId').value = client.id;
-            document.getElementById('clientName').value = client.name;
-            document.getElementById('clientPhone').value = client.phone;
-            document.getElementById('clientBookNo').value = client.bookNo || '';
-            
-            // Load measurements if they exist
-            if (client.measurements) {
-                Object.keys(client.measurements).forEach(key => {
-                    const element = document.getElementById(`measure${key.charAt(0).toUpperCase() + key.slice(1)}`);
-                    if (element && client.measurements[key]) {
-                        element.value = client.measurements[key];
-                    }
-                });
-            }
-            
-            // Load notes
-            const notesElement = document.getElementById('measureNotes');
-            if (notesElement && client.measurements && client.measurements.notes) {
-                notesElement.value = client.measurements.notes;
-            }
-        }
-    } else {
-        title.textContent = 'Add New Client';
-        document.getElementById('clientForm').reset();
-        document.getElementById('clientId').value = '';
-    }
-    
-    modal.style.display = 'block';
-}
-
-function closeClientModal() {
-    document.getElementById('clientModal').style.display = 'none';
-    editingClientId = null;
-}
-
-function saveClient(event) {
-    event.preventDefault();
-    
-    // Get all measurement values
-    const measurements = {};
-    const measurementFields = [
-        'length', 'shoulder', 'chest', 'waist', 'hips', 'sleeve', 'armhole', 
-        'bicep', 'wrist', 'neck', 'backWidth', 'frontLength', 'backLength', 
-        'thigh', 'knee', 'bottom', 'inseam', 'outseam', 'crotch', 'ankle'
-    ];
-    
-    measurementFields.forEach(field => {
-        const value = document.getElementById(`measure${field.charAt(0).toUpperCase() + field.slice(1)}`).value;
-        if (value) {
-            measurements[field] = value;
-        }
-    });
-    
-    // Get notes
-    const notesElement = document.getElementById('measureNotes');
-    if (notesElement && notesElement.value) {
-        measurements.notes = notesElement.value;
-    }
-    
-    const client = {
-        id: document.getElementById('clientId').value || generateId(),
-        name: document.getElementById('clientName').value,
-        phone: document.getElementById('clientPhone').value,
-        bookNo: document.getElementById('clientBookNo').value,
-        measurements: measurements,
-        createdAt: document.getElementById('clientId').value ? 
-            (getClientById(document.getElementById('clientId').value)?.createdAt || new Date().toISOString()) : 
-            new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    };
-
-    // Validate required fields
-    if (!client.name || !client.phone || !client.bookNo) {
-        showNotification('Please fill in all required fields (Name, Phone, Book Number)', 'error');
-        return;
-    }
-
-    saveClientToDB(client);
-    closeClientModal();
-    loadClients();
-    showNotification(editingClientId ? 'Client updated successfully!' : 'Client added successfully!');
-}
-
-function editClient(clientId) {
-    openClientModal(clientId);
-}
-
-function createInvoiceForClient(clientId) {
-    window.location.href = `invoice.html?clientId=${clientId}`;
-}
-
-function deleteClient(clientId) {
-    if (confirm('Are you sure you want to delete this client?')) {
-        deleteClientFromDB(clientId);
-        loadClients();
-        showNotification('Client deleted successfully!');
-    }
-}
-
-// Close search results when clicking outside
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.search-container')) {
-        document.getElementById('searchResults').style.display = 'none';
-    }
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('clientModal');
-    if (event.target === modal) {
-        closeClientModal();
-    }
-});
-
-// Load clients when page opens
-document.addEventListener('DOMContentLoaded', function() {
-    loadClients();
-});
+        // Load clients when page opens
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Clients page loaded'); // Debug log
+            loadClients();
+        });
     </script>
-
-    <style>
-        .large-modal .modal-content {
-            max-width: 900px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .search-container {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .search-container input {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-        }
-
-        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 0 0 10px 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            display: none;
-            z-index: 1000;
-        }
-
-        .search-result-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-        }
-
-        .search-result-item:hover {
-            background: #f5f5f5;
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .client-card {
-            background: white;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .client-info h4 {
-            margin-bottom: 8px;
-            color: var(--primary);
-            font-size: 1.2rem;
-        }
-
-        .client-details {
-            display: flex;
-            gap: 15px;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .measurement-badge {
-            background: var(--success);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            margin-top: 5px;
-            display: inline-block;
-        }
-
-        .client-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .form-section {
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .form-section h4 {
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .measurements-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .measurements-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .client-card {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-            
-            .client-details {
-                flex-direction: column;
-                gap: 5px;
-            }
-        }
-    </style>
-    <script>
-// Client management functionality
-class ClientManager {
-    constructor() {
-        this.clients = JSON.parse(localStorage.getItem('clients')) || [];
-        this.init();
-    }
-
-    init() {
-        this.bindEvents();
-        this.loadClients();
-    }
-
-    bindEvents() {
-        // Save client button
-        document.getElementById('saveClient')?.addEventListener('click', () => this.saveClient());
-        
-        // Clear form button
-        document.getElementById('clearForm')?.addEventListener('click', () => this.clearForm());
-        
-        // Search functionality
-        document.getElementById('searchClient')?.addEventListener('input', (e) => this.searchClients(e.target.value));
-    }
-
-    saveClient() {
-        const client = {
-            id: Date.now().toString(),
-            name: document.getElementById('clientName').value.trim(),
-            phone: document.getElementById('clientPhone').value.trim(),
-            email: document.getElementById('clientEmail').value.trim(),
-            address: document.getElementById('clientAddress').value.trim(),
-            measurements: document.getElementById('clientMeasurements').value.trim(),
-            registrationDate: new Date().toLocaleDateString(),
-            status: 'Active'
-        };
-
-        // Validation
-        if (!client.name) {
-            alert('Please enter client name');
-            return;
-        }
-
-        if (!client.phone) {
-            alert('Please enter client phone number');
-            return;
-        }
-
-        // Add to clients array
-        this.clients.unshift(client);
-        
-        // Save to localStorage
-        localStorage.setItem('clients', JSON.stringify(this.clients));
-        
-        // Reload client list
-        this.loadClients();
-        
-        // Clear form
-        this.clearForm();
-        
-        // Show success message
-        alert('Client added successfully!');
-    }
-
-    clearForm() {
-        document.getElementById('clientName').value = '';
-        document.getElementById('clientPhone').value = '';
-        document.getElementById('clientEmail').value = '';
-        document.getElementById('clientAddress').value = '';
-        document.getElementById('clientMeasurements').value = '';
-    }
-
-    loadClients() {
-        const tbody = document.getElementById('clientsTableBody');
-        if (!tbody) return;
-
-        if (this.clients.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No clients found</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = this.clients.map(client => `
-            <tr>
-                <td>${client.name}</td>
-                <td>${client.phone}</td>
-                <td>${client.email || 'N/A'}</td>
-                <td>${client.address || 'N/A'}</td>
-                <td>${client.measurements || 'N/A'}</td>
-                <td>${client.registrationDate}</td>
-                <td>
-                    <span class="badge bg-success">${client.status}</span>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    searchClients(query) {
-        const filteredClients = this.clients.filter(client => 
-            client.name.toLowerCase().includes(query.toLowerCase()) ||
-            client.phone.includes(query) ||
-            client.email?.toLowerCase().includes(query.toLowerCase())
-        );
-
-        const tbody = document.getElementById('clientsTableBody');
-        if (filteredClients.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No clients found</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = filteredClients.map(client => `
-            <tr>
-                <td>${client.name}</td>
-                <td>${client.phone}</td>
-                <td>${client.email || 'N/A'}</td>
-                <td>${client.address || 'N/A'}</td>
-                <td>${client.measurements || 'N/A'}</td>
-                <td>${client.registrationDate}</td>
-                <td>
-                    <span class="badge bg-success">${client.status}</span>
-                </td>
-            </tr>
-        `).join('');
-    }
-}
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    new ClientManager();
-});
-</script>
 </body>
 </html>
